@@ -4,6 +4,8 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var mongodb = require('mongodb');
+var mongoose = require('mongoose');
 // var index = require('./routes/index');
 
 // var users = require('./routes/users');
@@ -28,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/users', users);
 
 app.get('/',function(req, res, next) {
-    res.render('index.html');
+    res.render('index');
 });
 
 io.on('connection', function(socket){
@@ -37,10 +39,17 @@ io.on('connection', function(socket){
         console.log('user disconnected');
     });
 
-    socket.on('chat message', function(msg){
-      io.emit('chat message', msg);
-      console.log('message: ' + msg);
+
+    socket.on('chat message', function(data){
+        console.log('message: ' + data.username);
+        console.log('message: ' + data.message);
+        io.emit('chat message', {message:data.message,username:data.username});
     });
+
+    socket.on('add user',function (username) {
+        socket.broadcast.emit('add user',username);
+    });
+
 });
 
 http.listen(3000, function(){

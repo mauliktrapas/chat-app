@@ -3,36 +3,140 @@
 <head>
     <title>Socket.IO chat</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
-    </style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
 
+        html, body {
+            height: 100%;
+        }
+        #chatapp {
+            background-color: aqua;
+            /*height: 100%;*/
+            border-collapse: collapse;
+        }
+        #chatapp-main{
+            height: 100%;
+            background-color: pink;
+        }
+        #login {
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            background-color: yellow;
+            /*height: 100%;*/
+        }
+
+        #login {
+            display: table;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background-color: blueviolet;
+        }
+
+        .middle {
+            display: table-cell;
+            vertical-align: middle;
+            margin-left: 400px;
+            margin-right: 200px;
+            width: 400px;
+            background-color: chartreuse;
+        }
+
+        .inner {
+            margin-left: auto;
+            margin-right: auto;
+            width: 400px;
+            /*whatever width you want*/
+        }
+
+    </style>
 </head>
 <body>
-<ul id="messages"></ul>
-<form action="">
-    <input id="m" autocomplete="off" /><button>Send</button>
-</form>
+
+<div id="chatapp-main">
+
+    <div id="login">
+        <div class="middle">
+            <div class="inner">
+                what is your name?
+                <input id="usernameInput" name="name" />
+            </div>
+        </div>
+    </div>
+
+    <table id="chatapp"  style = "display:none">
+        <tr>
+            <td valign="top">
+                <ul id="messages"></ul>
+                <p id="typing" hidden>typing</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="bottom">
+                <input id="message-box" autocomplete="off" style = "position: absolute; bottom: 0" autofocus />
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 <script>
+
   $(function () {
     var socket = io();
-    $('form').submit(function(){
-      socket.emit('chat message', $('#m').val());
-      $('#m').val('');
-      return false;
+    var connected = false;
+
+    $(window).keydown(event => {
+
+      if (event.which === 13){
+
+          if(window.username){
+              socket.emit('chat message',{username : window.username, message : $('#message-box').val()}) ;
+              $('#message-box').val('');
+          }
+          else{
+              connected = true;
+              $('#login').fadeOut();
+              $('#chatapp').fadeIn();
+              $('#message-box').focus();
+              window.username = $('#usernameInput').val();
+              socket.emit('add user', window.username);
+          }
+      }
     });
-    socket.on('chat message', function(msg){
-      $('#messages').append($('<li>').text(msg));
+
+    $('#login').click( () => {
+        $('#usernameInput').focus();
+        }
+    );
+
+    $('#chatapp-main').click( () => {
+        $('#message-box').focus();
+        }
+    );
+
+
+    socket.on('chat message', function(data){
+        console.log(connected);
+        console.log(data.username);
+        console.log("connected");
+        $('#messages').append($('<li>').text(data.username + " :" +  data.message));
+
     });
+    socket.on('add user',function (username) {
+        console.log(username);
+        console.log("+++++++++++");
+        $('#messages').append($('<li>').text(username + "joined"));
+    });
+
   });
+
 </script>
 </body>
 </html>
